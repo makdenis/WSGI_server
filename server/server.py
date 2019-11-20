@@ -25,8 +25,8 @@ class WSGIServer:
 
     def handle_request(self):
         request_data = self.client_connection.recv(1024)
-        self.request_data = request_data.decode('utf-8')
-        if self.request_data:
+        if request_data:
+            self.request_data = request_data.decode('utf-8')
             self.parse_request(self.request_data)
             env = self.get_environment()
             result = self.application(env, self.start_response)
