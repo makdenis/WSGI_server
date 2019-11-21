@@ -2,9 +2,9 @@ import configparser
 
 
 class Config:
-    def __init__(self, config_path='./config.conf'):
+    def __init__(self, config_path):
         config = configparser.ConfigParser()
-        config.read('./config.conf')
+        config.read(config_path)
         self.path_project = config.get("wsgi_server", "project_path")
         self.app_module = config.get("wsgi_server", "app_module")
         self.app_name = config.get("wsgi_server", "app_name")

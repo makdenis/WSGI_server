@@ -8,6 +8,9 @@ from server.workers import start_workers
 from server.config import Config
 
 
+DEFAULT_CONFIG = './config.conf'
+
+
 def create_socket(server_address: typing.Tuple[str, int], request_queue_size: int):
     address_family = socket.AF_INET
     socket_type = socket.SOCK_STREAM
@@ -23,7 +26,8 @@ def create_socket(server_address: typing.Tuple[str, int], request_queue_size: in
 
 
 if __name__ == '__main__':
-    config = Config('./config.conf')
+    config_path = DEFAULT_CONFIG if len(sys.argv) < 2 else sys.argv[1]
+    config = Config(config_path)
     if config.path_project != './':
         sys.path.insert(0, config.path_project)
     wsgi = importlib.import_module(config.app_module)
