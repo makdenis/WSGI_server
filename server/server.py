@@ -2,6 +2,7 @@ import io
 import socket
 import sys
 import urllib
+import typing
 import logging
 
 
@@ -23,6 +24,8 @@ class WSGIServer:
                 self.handle_request()
             except Exception as e:
                 logging.error('Exception while handle', e)
+            finally:
+                self.client_connection.close()
 
     def handle_request(self):
         request_data = self.client_connection.recv(1024)
@@ -82,7 +85,7 @@ class WSGIServer:
 
         return env
 
-    def start_response(self, status, response_headers, exc_info=None):
+    def start_response(self, status: str, response_headers: typing.List, exc_info=None):
         server_headers = [
             ('Server', 'WSGIServer 1.0'),
         ]
