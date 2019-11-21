@@ -31,5 +31,5 @@ if __name__ == '__main__':
 
     server_address = (config.host, config.port)
     socket_listen = create_socket(server_address, config.request_queue_size)
-    logging.info(f'WSGIServer: Serving HTTP on port {config.port} ...\n')
+    logging.info(f'WSGIServer: Serving HTTP on port {config.port}')
     start_workers(config, socket_listen, application)

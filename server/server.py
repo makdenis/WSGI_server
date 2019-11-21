@@ -12,6 +12,7 @@ class WSGIServer:
         self.server_name = socket.getfqdn(host)
         self.server_port = port
         self.headers = []
+        self.request_lines = []
         self.application = application
 
     def serve_requests(self):
@@ -34,8 +35,9 @@ class WSGIServer:
         else:
             self.client_connection.close()
 
-    def parse_request(self, text):
+    def parse_request(self, text: str):
         lines = text.splitlines()
+        self.request_lines = lines
         request_line = lines[0]
         request_line = request_line.rstrip('\r\n')
         (
@@ -65,6 +67,18 @@ class WSGIServer:
         env['QUERY_STRING'] = query
         env['SERVER_NAME'] = self.server_name
         env['SERVER_PORT'] = str(self.server_port)
+
+        for line in self.request_lines:
+            if ':' in line:
+                k, v = line.split(':', 1)
+                k = k.replace('-', '_').upper()
+                v = v.strip()
+                if k in env:
+                    continue
+                if 'HTTP_' + k in env:
+                    env['HTTP_' + k] += ',' + v
+                else:
+                    env['HTTP_' + k] = v
 
         return env
 
