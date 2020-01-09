@@ -12,3 +12,4 @@ class Config:
         self.host = config.get("wsgi_server", "host")
         self.port = int(config.get("wsgi_server", "port"))
         self.request_queue_size = int(config.get("wsgi_server", "request_queue_size"))
+        self.buffer_size = int(config.get("wsgi_server", "buffer_size"))

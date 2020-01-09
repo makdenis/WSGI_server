@@ -5,6 +5,8 @@ import urllib
 import typing
 import logging
 
+from server.config import Config
+
 
 class WSGIServer:
     def __init__(self, socket_listen: socket.socket, application):
@@ -16,19 +18,25 @@ class WSGIServer:
         self.request_lines = []
         self.application = application
 
-    def serve_requests(self):
+    def serve_requests(self, config: Config):
         socket_listen = self.socket_listen
         while True:
             self.client_connection, client_address = socket_listen.accept()
             try:
-                self.handle_request()
+                self.handle_request(config)
             except Exception as e:
                 logging.error('Exception while handle', e)
             finally:
                 self.client_connection.close()
 
-    def handle_request(self):
-        request_data = self.client_connection.recv(1024)
+    def handle_request(self, config: Config):
+        buff_size = config.buffer_size
+        request_data = b''
+        while True:
+            part = self.client_connection.recv(buff_size)
+            request_data += part
+            if len(part) < buff_size:
+                break
         if request_data:
             self.request_data = request_data.decode('utf-8')
             self.parse_request(self.request_data)
@@ -50,10 +58,15 @@ class WSGIServer:
         ) = request_line.split()
 
     def get_environment(self):
+        input = self.request_data.split('\r\n\r\n')
+        if len(input) > 1:
+            input = input[1]
+        else:
+            input = self.request_data
         env = {
             'wsgi.version': (1, 0),
             'wsgi.url_scheme': 'http',
-            'wsgi.input': io.StringIO(self.request_data),
+            'wsgi.input': io.BytesIO(input.encode()),
             'wsgi.errors': sys.stderr,
             'wsgi.multithread': False,
             'wsgi.multiprocess': False,
@@ -70,12 +83,15 @@ class WSGIServer:
         env['QUERY_STRING'] = query
         env['SERVER_NAME'] = self.server_name
         env['SERVER_PORT'] = str(self.server_port)
-
         for line in self.request_lines:
             if ':' in line:
                 k, v = line.split(':', 1)
                 k = k.replace('-', '_').upper()
                 v = v.strip()
+                if k == 'CONTENT_LENGTH':
+                    env['CONTENT_LENGTH'] = v
+                if k == 'CONTENT_TYPE':
+                    env['CONTENT_TYPE'] = v
                 if k in env:
                     continue
                 if 'HTTP_' + k in env:
